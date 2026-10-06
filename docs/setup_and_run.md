@@ -66,17 +66,17 @@ for archive in glob.glob("/tmp/favorita/*.7z"):
 
 ---
 
-## 4. Run the Notebooks in Order
+## 4. Run the Pipeline
 
-Run top to bottom, in sequence. Each notebook writes its tables into the `workspace.foodflow` schema.
+Open **`notebooks/FoodFlow_pipeline.ipynb`** and run it top to bottom. It executes all stages in sequence, writing every table into the `workspace.foodflow` schema.
 
-| Order | Notebook | Produces |
-|---|---|---|
-| 1 | `01_bronze_ingest` | `bronze_train`, `bronze_stores`, `bronze_items`, `bronze_transactions`, `bronze_oil`, `bronze_holidays` |
-| 2 | `02_silver_clean` | `silver_sales`, `silver_oil`, `silver_holidays`, `silver_stores`, `silver_items` (+ reconciliation & integrity checks) |
-| 3 | `03_gold_model` | `gold_fact_sales`, `gold_dim_date`, `gold_dim_store`, `gold_dim_item`, `gold_daily_store_sales`, `gold_ml_features` |
-| 4 | `04_analytics` | Spark SQL analytics + dashboard charts |
-| 5 | `05_ml_forecast` | Gradient Boosted Trees forecast, backtest vs baseline, MAPE/RMSE, feature importance, forecast plot |
+| Stage | Produces |
+|---|---|
+| Bronze | `bronze_train`, `bronze_stores`, `bronze_items`, `bronze_transactions`, `bronze_oil`, `bronze_holidays` |
+| Silver | `silver_sales`, `silver_oil`, `silver_holidays`, `silver_stores`, `silver_items` (+ reconciliation & integrity checks) |
+| Gold | `gold_fact_sales`, `gold_dim_date`, `gold_dim_store`, `gold_dim_item`, `gold_daily_store_sales`, `gold_ml_features` |
+| Analytics | Spark SQL analytics + dashboard charts |
+| ML Forecast | Gradient Boosted Trees forecast, backtest vs baseline, MAPE/RMSE, feature importance, forecast plot |
 
 ---
 
@@ -100,9 +100,9 @@ If counts are non-zero and the Silver reconciliation/integrity checks pass, the 
 
 ---
 
-## 6. Export Notebooks for GitHub
+## 6. Export the Notebook for GitHub
 
-To publish the repo, export each Databricks notebook as `.ipynb` (File → Export → IPython Notebook) into a local `notebooks/` folder, then:
+To publish the repo, export the Databricks notebook as `.ipynb` (File → Export → IPython Notebook) into the local `notebooks/` folder, then:
 
 ```bash
 git init

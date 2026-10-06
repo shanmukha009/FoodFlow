@@ -115,10 +115,10 @@ Why Medallion: each layer has a single clear responsibility. Bronze preserves th
 
 ## 5. Pipeline — Layer by Layer
 
-### Bronze — raw ingestion (`01_bronze_ingest`)
+### Bronze — raw ingestion
 Downloads the six Favorita files from Kaggle via the API, extracts them, and lands each one **as-is** into a Delta table (`bronze_train`, `bronze_stores`, `bronze_items`, `bronze_transactions`, `bronze_oil`, `bronze_holidays`). No cleaning happens here by design — Bronze is the immutable landing zone, so the pipeline can be rerun from a known raw state.
 
-### Silver — cleaning & reconciliation (`02_silver_clean`)
+### Silver — cleaning & reconciliation
 This is where real-world mess is resolved:
 
 - **`silver_sales`** — splits `unit_sales` into true demand vs returns. Negative `unit_sales` values are returns, so an `is_return` flag is added and a clean `unit_sales_demand` column (returns floored to 0) is derived for forecasting.
@@ -128,7 +128,7 @@ This is where real-world mess is resolved:
 
 A **reconciliation check** confirms cleaned totals tie back to the source, and **referential-integrity checks** confirm every sales key resolves to a valid store, item, and date.
 
-### Gold — dimensional model + marts (`03_gold_model`)
+### Gold — dimensional model + marts
 A classic **star schema** built for consumption:
 
 - **`gold_fact_sales`** — the central fact at date × store × item grain, with demand, promotion flag, and foreign keys.
@@ -142,7 +142,7 @@ A classic **star schema** built for consumption:
 
 ## 6. Analytics / BI
 
-Spark SQL across the Gold star schema answers core business questions, rendered as Databricks dashboard charts (`04_analytics`):
+Spark SQL across the Gold star schema answers core business questions, rendered as Databricks dashboard charts:
 
 - **Monthly sales trend** across the full 2013–2017 window.
 - **Top item families** by total demand.
@@ -154,7 +154,7 @@ Spark SQL across the Gold star schema answers core business questions, rendered 
 
 ## 7. Machine Learning — Demand Forecast
 
-A **Gradient Boosted Trees** regressor (`scikit-learn`) forecasts daily demand (`05_ml_forecast`).
+A **Gradient Boosted Trees** regressor (`scikit-learn`) forecasts daily demand.
 
 **Feature table (`gold_ml_features`):**
 
@@ -197,7 +197,7 @@ Data quality is validated **in the pipeline**, so downstream analytics and ML ru
 - A star schema serving both BI dashboards and ML from a single trusted model.
 - A demand-forecasting model **backtested on an unseen 90-day window** and benchmarked against a naive baseline, with MAPE/RMSE and feature importance reported.
 
-> Exact metric values come from the latest run of `05_ml_forecast` in Databricks; see the notebook output for the current MAPE/RMSE and the forecast plot.
+> Exact metric values come from the latest run of the ML Forecast stage in `FoodFlow_pipeline.ipynb`; see the notebook output for the current MAPE/RMSE and the forecast plot.
 
 ---
 
@@ -206,11 +206,7 @@ Data quality is validated **in the pipeline**, so downstream analytics and ML ru
 ```
 FoodFlow/
 ├── notebooks/
-│   ├── 01_bronze_ingest.ipynb     # Kaggle API → raw Delta (Bronze)
-│   ├── 02_silver_clean.ipynb      # clean, reconcile, integrity checks (Silver)
-│   ├── 03_gold_model.ipynb        # star schema + marts + feature table (Gold)
-│   ├── 04_analytics.ipynb         # Spark SQL business analytics + dashboard
-│   └── 05_ml_forecast.ipynb       # Gradient Boosted Trees demand forecast
+│   └── FoodFlow_pipeline.ipynb    # full end-to-end pipeline (Bronze→Silver→Gold→analytics→ML)
 ├── docs/
 │   ├── architecture.md            # design decisions & medallion rationale
 │   ├── data_dictionary.md         # table + column definitions, all layers
@@ -226,7 +222,7 @@ FoodFlow runs on **Databricks (serverless compute)**. Full step-by-step instruct
 
 1. Open a Databricks workspace and attach a notebook to **Serverless** compute.
 2. Configure Kaggle API access and accept the competition rules.
-3. Run the notebooks in order: `01` → `02` → `03` → `04` → `05`.
+3. Open `notebooks/FoodFlow_pipeline.ipynb` and run it top to bottom (Bronze → Silver → Gold → analytics → ML).
 
 All tables are created in the `workspace.foodflow` schema.
 

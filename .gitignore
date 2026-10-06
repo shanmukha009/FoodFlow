@@ -14,3 +14,6 @@ __pycache__/
 .kaggle/
 *access_token*
 .env
+
+# macOS
+.DS_Store
