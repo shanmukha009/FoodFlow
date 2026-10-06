@@ -18,7 +18,8 @@ This is the same shape of system an enterprise data team delivers for a client: 
 9. [Results](#9-results)
 10. [Repo Structure](#10-repo-structure)
 11. [How to Run](#11-how-to-run)
-12. [Key Learnings](#12-key-learnings)
+12. [Orchestration](#12-orchestration)
+13. [Key Learnings](#13-key-learnings)
 
 ---
 
@@ -108,6 +109,7 @@ Why Medallion: each layer has a single clear responsibility. Bronze preserves th
 | Transformation | PySpark + Spark SQL |
 | Ingestion | Kaggle API (programmatic download) |
 | Machine learning | scikit-learn — `GradientBoostingRegressor` |
+| Orchestration | Databricks Workflows (scheduled job, retries, alerts) |
 | Analysis / viz | pandas, matplotlib, Databricks dashboards |
 | Languages | Python, SQL |
 
@@ -207,10 +209,13 @@ Data quality is validated **in the pipeline**, so downstream analytics and ML ru
 FoodFlow/
 ├── notebooks/
 │   └── FoodFlow_pipeline.ipynb    # full end-to-end pipeline (Bronze→Silver→Gold→analytics→ML)
+├── workflows/
+│   └── foodflow_job.json          # Databricks Workflow definition (orchestration as code)
 ├── docs/
 │   ├── architecture.md            # design decisions & medallion rationale
 │   ├── data_dictionary.md         # table + column definitions, all layers
-│   └── setup_and_run.md           # environment setup + run order
+│   ├── setup_and_run.md           # environment setup + run order
+│   └── orchestration_guide.md     # Databricks Workflow setup & rationale
 └── README.md
 ```
 
@@ -228,7 +233,23 @@ All tables are created in the `workspace.foodflow` schema.
 
 ---
 
-## 12. Key Learnings
+## 12. Orchestration
+
+FoodFlow runs as a scheduled **Databricks Workflow** (`FoodFlow_Pipeline`), not a notebook executed by hand, so it behaves like a pipeline that operates rather than a script someone remembers to run. The job definition is version-controlled in [`workflows/foodflow_job.json`](workflows/foodflow_job.json) (orchestration as code).
+
+| Setting | Value |
+|---|---|
+| Task | `run_pipeline` — runs the end-to-end notebook on serverless compute |
+| Schedule | Daily, 02:03 (America/Los_Angeles) |
+| Retries | 2 automatic retries, 5-minute interval |
+| Alerts | Email on success and on failure |
+| Concurrency | 1 run at a time (no overlapping runs) |
+
+This adds the operational layer that production pipelines need: **scheduling** (the forecast refreshes on its own), **automatic retries** (transient failures recover without intervention), **alerting** (failures are noticed immediately), and **monitoring** (a full run history with per-run logs). Databricks also auto-captures **data lineage** across the job's source and output tables. See [`docs/orchestration_guide.md`](docs/orchestration_guide.md) for setup and rationale.
+
+---
+
+## 13. Key Learnings
 
 Building FoodFlow reinforced the discipline of an enterprise data pipeline: land raw data reliably and keep it replayable, resolve real-world mess (returns, missing prices, transferred holidays) exactly once in a trusted layer, **reconcile** cleaned data back to source, model a star schema for consumption, and only then layer analytics and ML on top. Treating data quality as a first-class, validated step at every stage is what separates a demo from a system a business could actually trust.
 

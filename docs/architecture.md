@@ -89,3 +89,5 @@ Bronze (raw, replayable)
       → Gold (star schema + marts + ML features)
          → BI dashboards  &  Gradient Boosted Trees forecast (backtested vs baseline)
 ```
+
+The whole flow runs as a scheduled **Databricks Workflow** with retries and failure alerting, so it operates unattended rather than being run by hand. See [`orchestration_guide.md`](orchestration_guide.md).
