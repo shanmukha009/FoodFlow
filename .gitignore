@@ -1,0 +1,16 @@
+# data & archives
+*.csv
+*.7z
+*.zip
+/tmp/
+data/
+
+# python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# secrets
+.kaggle/
+*access_token*
+.env
